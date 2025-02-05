@@ -1,0 +1,117 @@
+<!-- 
+
+UNCORE - Team, 2025
+
+This Turtlebot3 Burger model is based on the Xacro models provided by Robotis
+(https://github.com/ROBOTIS-GIT/turtlebot3/tree/master/turtlebot3_description), and then translated into
+URDF and finally MJFC.
+
+Some notes:
+- The velocity actuator requires the implicitfast integration method.
+- The chassis free joint has been improved and updated using the mass and inertia values of the URDF files.
+- The caster wheel has been modeled as a ball joint with no actuation.
+- The lidar has been modeled using the replicate tag. The lidar rays are shown only when a collision is detected.
+  These are the lidar docs we have used:
+     · https://github.com/google-deepmind/mujoco/issues/1654
+     · https://github.com/google-deepmind/dm_control/blob/main/dm_control/suite/quadruped.xml#L306
+     · https://github.com/google-deepmind/mujoco/discussions/688 (functional example at the bottom of the web)
+-->   
+ 
+
+
+
+<mujoco model="turtlebot3_burger">
+  <compiler angle="degree" meshdir="/home/ana/tb3burger/mujoco_gymnasium/assets/meshes/"/>
+  <option timestep = "0.001" gravity="0 0 -9.81" integrator="implicitfast"/>
+  
+  <asset>
+    <mesh name="burger_base" file="bases/burger_base.stl" scale="0.001 0.001 0.001"/> 
+    <mesh name="left_wheel_mesh" file="wheels/left_tire.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="right_wheel_mesh" file="wheels/right_tire.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="lds" file="sensors/lds.stl" scale="0.001 0.001 0.001"/>
+    <texture name="skybox" type="skybox" builtin="gradient" rgb1=".4 .6 .8" rgb2="0 0 0"
+               width="800" height="800" mark="random" markrgb="1 1 1"/>
+  </asset>
+   
+  <worldbody>
+   <light diffuse=".5 .5 .5" pos="0 0 3" dir="0 0 -1"/>
+   <geom type="plane" size="3 3 0.1" rgba=".9 .9 .9 1"/>
+   <!--<geom type="cylinder" pos="0.3 -0.05 0.15" size="0.05 0.15" rgba=".9 0 .9 1"/>
+   <geom type="cylinder" pos="-0.1 1.2 0.15" size="0.05 0.15" rgba=".2 0.8 0.2 1"/>
+   <geom type="cylinder" pos="-0.35 0.05 0.15" size="0.05 0.15" rgba=".9 0.9 0 1"/>
+   <geom type="cylinder" pos="0.35 0.8 0.15" size="0.05 0.15" rgba=".9 0.5 0 1"/>-->
+   <geom name="goal" type="cylinder" pos="0.22 1.2 0.07" size="0.025 0.07" rgba=".9 0 0 0.5"
+   contype="0" conaffinity="0"/>
+   <!-- Turtlebot 3 Burger-->  
+   <body name = "chassis">
+          <joint type="free" damping="0.001"/>
+          <!-- This should align joint and CoM <freejoint align="true"/> -->
+          <!--<freejoint align="true"/> -->
+          <!-- However, it does not work. Maybe it is because there are child bodies"/> -->
+          <!-- The mass and diaginertia values are from the tb3burger urdf file --> 
+          <!-- The xyz axis order has been changed as explained in the left_wheel_link tag --> 
+          <inertial pos="0 0 0" mass="0.082573504" diaginertia="2.2124416e-03 2.1193702e-03 2.0064271e-03"/>
+          <!-- Main body and lidar--> 
+          <geom type="mesh" rgba="0.4 0.4 0.4 1" mesh="burger_base" pos="-0.032 0 0.08"/>
+          <geom pos="-0.017 0 0.25" quat="1 0 0 0" type="mesh" rgba="0.3 0.3 0.3 1" mesh="lds"/>
+          <replicate count="360" euler="0 0 1">   
+                  <site name="rf" pos="-0.017 0 0.25" zaxis="1 0 0"/>
+          </replicate>           	  
+          <!-- Caster whel (blue ball) --> 
+          <body name = "caster_wheel" pos="-0.081 7.96327e-07 0.015">
+             <joint name="caster_wheel_joint" type="ball" damping="0.001"/> 
+             <inertial pos="0 0 0" mass="0.005" diaginertia="0.001 0.001 0.001"/>
+             <geom size="0.015 0.0045 0.01" type="sphere" rgba="0.0 0.0 1.0 1"/>
+          </body>
+          <!-- Left wheel --> 
+          <body name="left_wheel_link" pos="0 0.08 0.032" euler="90 0 0"> 
+            <!-- The values of diaginertia tag seem to be in the wrong order compared to the urdf file-->
+            <!-- That tag should include Ixx Iyy Izz values, since that is the default --> 
+            <!-- xyz axis order of the mujoco compiler tag -->  
+            <!-- However, the URDF to mujoco conversion seems to change the order to zyx -->  
+            <!-- So, the "wrong" diaginertia values provided by the urdf2mujoco are --> 
+            <!-- diaginertia="2.07126e-05 1.11924e-05 1.11756e-05" --> 
+            <!-- The diaginertia tag now stores the xyz order from the urdf file" --> 
+            <inertial pos="0 0 0" quat="-0.000890159 0.706886 0.000889646 0.707326" mass="0.0284989" diaginertia="1.11756e-05 1.11924e-05 2.07126e-05"/>
+            <site name="left_wheel_site" pos="0 0 0"/>
+            <joint name="left_wheel_joint" type="hinge" axis="0 0 -1"/> 
+            <geom type="mesh" rgba="0.3 0.3 0.3 1" mesh="left_wheel_mesh" euler="0 90 90"/>
+          </body>
+           <!-- Right wheel --> 
+          <body name="right_wheel_link" pos="0 -0.08 0.032" euler="90 0 0">  
+            <!-- Same as the left_wheel_link --> 
+            <inertial pos="0 0 0" quat="-0.000890159 0.706886 0.000889646 0.707326" mass="0.0284989" diaginertia="1.11756e-05 1.11924e-05 2.07126e-05"/>
+            <site name="right_wheel_site" pos="0 0 0"/>
+            <joint name="right_wheel_joint" type="hinge" axis="0 0 -1"/> 
+            <geom type="mesh" rgba="0.3 0.3 0.3 1" mesh="right_wheel_mesh" euler="0 90 90"/>
+          </body>
+     </body>
+  </worldbody>
+  
+<!--<actuator>
+	<motor name="left-velocity-servo" joint="left_wheel_joint" />
+	<motor name="right-velocity-servo" joint="right_wheel_joint" />
+</actuator>-->
+
+<!-- We don't want to control the wheel position, just its speed, -->
+<!-- so we only add velocity actuators -->
+<!-- It's just a P controller, and kv acts as kp -->
+<!-- The lower the kp, the slower the wheel reaches the reference (and with less oscillations)-->
+<!-- However, according to the Mujoco docs, kv is the velocity feedback gain -->
+<actuator>
+	<velocity name="left-velocity-servo" joint="left_wheel_joint" kv="1" ctrllimited="true" ctrlrange="-1 1"/>
+	<!--<position name="left-velocity-pos" joint="left_wheel_joint"/>-->
+	<velocity name="right-velocity-servo" joint="right_wheel_joint" kv="1" ctrllimited="true" ctrlrange="-1 1"/>
+	<!--<position name="right-velocity-pos" joint="right_wheel_joint"/>-->
+</actuator>
+
+<sensor>
+    <jointvel name="left-velocity-sensor" joint="left_wheel_joint"/>
+    <jointvel name="right-velocity-sensor" joint="right_wheel_joint"/>
+    <velocimeter name="left-velocimeter" site="left_wheel_site"/>
+    <velocimeter name="right-velocimeter" site="right_wheel_site"/>
+    <rangefinder site="rf"/>
+</sensor>
+ 
+    
+ </mujoco>
