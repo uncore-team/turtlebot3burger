@@ -1,6 +1,6 @@
 # Turtlebot3 Burger simulation with MuJoCo, Gymnasium and Stable Baselines3
 
-*** This is a WIP project. It is functional and profusely documented, though it has not been thorougly tested ***
+***This is a WIP project. It is functional and profusely documented, but it has not been thoroughly tested***
 
 This folder contains several files that allow to create a MuJoCo custom environment for Turtlebot3 Burger that can be used with Gymnasium in order to learn some task using RL algorithms included in Stable Baselines 3:
 
