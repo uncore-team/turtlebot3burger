@@ -8,5 +8,7 @@ Then, it sends the speed commands to the turtlebot via the cmd_vel topic.
 - It listens to the turtlebot /scan topic to get the lidar measurements and runs a (now) silly processing on those data.
 Then, it sends the result of the processing to the Tyrell defined topic tb3_scan_sector
 
+[DISCLAIMER] This is a WIP version and it is not fully tested.
+
 
 
